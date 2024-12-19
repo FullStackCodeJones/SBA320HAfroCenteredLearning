@@ -1,30 +1,48 @@
-import React, { useSTate, useEffect } from "react";
-import { fetchBooks } from "./api"; // Importing the function that I created in api.js
+import React, { useState, useEffect } from "react";
+import { fetchBooks } from "./api"; // Importing the function that fetches book data from the API
 
 const App = () => {
-  const [books, setBooks] = useState([]); //State where the books will store
-  const [loading, setLoading] = useState(true); // State to show loading status
-  const [error, setError] = useState(null); // State to show error message
+  // State variables
+  const [books, setBooks] = useState([]); // State to store the books data
+  const [loading, setLoading] = useState(true); // State to track the loading status
+  const [error, setError] = useState(null); // State to store error messages
 
+  // Function to load books from the API
+  const loadBooks = async () => {
+    try {
+      setLoading(true); // Set loading to true before starting the fetch process
+      const booksData = await fetchBooks(); // Fetch books data from the API
+      setBooks(booksData); // Update the books state with the fetched data
+      setError(null); // Clear any previous error message
+    } catch (error) {
+      setError("Failed to fetch data from Open Library API"); // Set an error message if something goes wrong
+    } finally {
+      setLoading(false); // Set loading to false after fetch process completes (success or failure)
+    }
+  };
+
+  // useEffect to fetch books when the component mounts
   useEffect(() => {
-    // This function will be run when the component is first loaded
-    const loadBooks = async () => {
-      try {
-        const booksData = await fetchBooks(); //Fetch Books from the API
-        setBooks(booksData); //Sets the books data to the state
-        setLoading(false); //Set loading to false since the data is fetched
-      } catch (error) {
-        setError("Failed to Fetch Data from Open Library API"); //Simply sets the eror if something goes wrong
-        setLoading(false); //Set loading to false after error
-      }
-    };
-    loadBooks(); //Call the loadBooks function
-  }, []); // The empty array means that this effect only will run once when the component loads
+    loadBooks(); // Call the loadBooks function
+  }, []); // Empty dependency array ensures this runs only once when the component is mounted
 
-  if (error) {
-    return <div>{error}</div>; //To Display Loading while waiting for Data
+  // Display loading state
+  if (loading) {
+    return <div>Loading...</div>; // Show "Loading..." while fetching data
   }
 
+  // Display error state with a retry button
+  if (error) {
+    return (
+      <div>
+        <p>{error}</p> {/* Display the error message */}
+        <button onClick={loadBooks}>Retry</button>{" "}
+        {/* Retry button to attempt fetching again */}
+      </div>
+    );
+  }
+
+  // Render the list of books
   return (
     <div>
       <h1>
@@ -32,7 +50,7 @@ const App = () => {
         Everywhere!
       </h1>
       <ul>
-        {/* Loop Through The Books And Display Them */}
+        {/* Loop through the books and display each one */}
         {books.map((book) => (
           <li key={book.key}>
             <h2>{book.title}</h2>
